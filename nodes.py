@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from PIL import Image, ImageChops
 
+
 def convert_to_pil(image: torch.Tensor) -> Image.Image:
     if isinstance(image, Image.Image):
         return image
@@ -22,7 +23,7 @@ def convert_to_tensor(image: Image.Image) -> torch.Tensor:
         return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
 
-class MyImageRotate:
+class SimpleImageRotate:
     def __init__(self):
         pass
     
@@ -44,48 +45,32 @@ class MyImageRotate:
     CATEGORY = "image"
 
     def rotate(self, image:torch.Tensor, angle:float=0.0):
-        img = convert_to_pil(image).convert("RGBA")
+        image = convert_to_pil(image).convert("RGBA")
 
-        # 元画像を読み込み
-        image = Image.open("your_image.png").convert("RGBA")
+        rotated = image.rotate(angle, resample=Image.BICUBIC, expand=True)
+        rotated.save("rotated.png")
 
-        # 回転後の画像（expand=Trueで余白あり）
-        rotated = image.rotate(15, resample=Image.BICUBIC, expand=True)
+        alpha = rotated.split()[-1]
+        reverse_alpha = ImageChops.invert(alpha).convert("RGB")
+        reverse_alpha.save("reverse.png")
 
-        # 回転前画像を新しいサイズで中央に貼り付ける（比較用）
-        bg = Image.new("RGBA", rotated.size, (0, 0, 0, 0))
-        offset = (
-            (rotated.width - image.width) // 2,
-            (rotated.height - image.height) // 2
-        )
-        bg.paste(image, offset)
-
-        # 差分を計算（余白のある部分だけ残る）
-        diff = ImageChops.difference(rotated, bg)
-
-        # 差分画像を白黒マスクに変換（透明部分だけ抽出）
-        mask = diff.convert("L").point(lambda x: 255 if x > 0 else 0, mode='1')
-
-        # 白い背景にマスクを適用して白い画像を作る
-        white_bg = Image.new("RGB", rotated.size, "white")
-        only_margin = Image.composite(white_bg, Image.new("RGB", rotated.size, "black"), mask)
-
-        only_margin.save("only_margin.png")
-
+        return (convert_to_tensor(rotated), convert_to_tensor(reverse_alpha))
 
 
 
 NODE_CLASS_MAPPINGS = {
-    "CalcResolution": CalcResolution
+    "Simple Image Rotate": SimpleImageRotate
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "CalcResolution": "CalcResolution",
+    "Simple Image Rotate": "Simple Image Rotate",
 }
 
 
 def simple_test():
-    pass
+    mir = SimpleImageRotate()
+    image = Image.open("test.png")
+    mir.rotate(image, 3555.1)
 
 
 #if __name__ == "__main__":
