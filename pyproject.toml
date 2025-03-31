@@ -1,0 +1,15 @@
+[project]
+name = "comfyui_my_img_util"
+description = "This is a ComfyUI node that rotates an image by specifying an angle or selects one image from multiple images."
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/sugarkwork/comfyui_my_img_util"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "sugarknight"
+DisplayName = "comfyui_my_img_util"
+Icon = ""
