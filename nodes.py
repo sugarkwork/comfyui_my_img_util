@@ -65,11 +65,9 @@ class AutoImageSelector:
     @classmethod
     def INPUT_TYPES(s):
         return {
-            "required": {
+            "optional": {
                 "image1": ("IMAGE",),
                 "rank1": ("INT", {"default": 1, "min": 1, "step": 1}),
-            },
-            "optional": {
                 "image2": ("IMAGE",),
                 "rank2": ("INT", {"default": 2, "min": 1, "step": 1}),
                 "image3": ("IMAGE",),
@@ -94,11 +92,11 @@ class AutoImageSelector:
         def is_valid(self):
             return self.rank >= 0 and self.image is not None
 
-    def select(self, image1:torch.Tensor, rank1:int=1, image2:torch.Tensor=None, rank2:int=2, image3:torch.Tensor=None, rank3:int=3, image4:torch.Tensor=None, rank4:int=4) -> torch.Tensor:
+    def select(self, image1:torch.Tensor=None, rank1:int=1, image2:torch.Tensor=None, rank2:int=2, image3:torch.Tensor=None, rank3:int=3, image4:torch.Tensor=None, rank4:int=4) -> torch.Tensor:
         images = [self.ImageRank(rank1, image1), self.ImageRank(rank2, image2), self.ImageRank(rank3, image3), self.ImageRank(rank4, image4)]
 
         top_rank = sys.maxsize
-        top_rank_image = image1
+        top_rank_image = None
         for img in images:
             if not img.is_valid():
                 continue
@@ -106,7 +104,7 @@ class AutoImageSelector:
                 top_rank = img.rank
                 top_rank_image = img.image
         
-        return (top_rank_image,top_rank)
+        return (top_rank_image, top_rank)
 
 
 NODE_CLASS_MAPPINGS = {
