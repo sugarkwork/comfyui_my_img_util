@@ -1,7 +1,7 @@
 [project]
 name = "comfyui_my_img_util"
 description = "This is a ComfyUI node that rotates an image by specifying an angle or selects one image from multiple images."
-version = "1.0.0"
+version = "1.0.1"
 license = { file = "LICENSE" }
 dependencies = []
 
