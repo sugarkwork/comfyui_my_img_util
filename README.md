@@ -2,19 +2,6 @@
 
 ComfyUI 用の実験用のノードです。
 
-# Installation
-
-リポジトリをクローンし、`requirements.txt` から必要なライブラリをインストールしてください。
-
-```bash
-git clone https://github.com/sugarkwork/comfyui_my_img_util.git
-cd comfyui_my_img_util
-pip install -r requirements.txt
-```
-
-上記コマンドを実行後、ComfyUIを再起動してください。
-
-
 # Nodes
 
 ## OpenCV Denoise (Luma/Chroma)
