@@ -33,6 +33,9 @@ OpenCVの `fastNlMeansDenoisingColored` を利用して、画像のノイズを�
 ### Outputs
 - `IMAGE`: (IMAGE) ノイズ除去後の画像
 
+<img width="2238" height="1793" alt="image" src="https://github.com/user-attachments/assets/2a982667-3c08-4533-a8bb-92890cbc7786" />
+
+
 ## Simple Image Rotate
 
 角度を指定して画像を回転します。はみ出した部分を accommodating するために、画像のサイズが変更されることがあります。
