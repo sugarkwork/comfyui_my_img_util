@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import torch
 from PIL import Image, ImageChops
+import cv2
 
 
 def convert_to_pil(image: torch.Tensor) -> Image.Image:
@@ -121,14 +122,59 @@ class AutoImageSelector:
         return (top_rank_image, top_rank)
 
 
+class OpenCVDenoiseColored:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "h_luminance": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 100.0, "step": 0.5}),
+                "h_color": ("FLOAT", {"default": 3.0, "min": 0.0, "max": 100.0, "step": 0.5}),
+                "search_window": ("INT", {"default": 5, "min": 5, "max": 50, "step": 2}),
+                "template_window": ("INT", {"default": 3, "min": 3, "max": 20, "step": 2}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "denoise"
+    CATEGORY = "Image/Post-Processing"
+
+    def denoise(self, image, h_luminance, h_color, search_window, template_window):
+        output_images = []
+        
+        for img in image:
+            img_np = (img.cpu().numpy() * 255).astype(np.uint8)
+            img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+            
+            denoised_bgr = cv2.fastNlMeansDenoisingColored(
+                img_bgr,
+                None,
+                h_luminance,
+                h_color,
+                template_window,
+                search_window
+            )
+            
+            denoised_rgb = cv2.cvtColor(denoised_bgr, cv2.COLOR_BGR2RGB)
+            img_tensor = torch.from_numpy(denoised_rgb.astype(np.float32) / 255.0)
+            output_images.append(img_tensor)
+
+        return (torch.stack(output_images),)
+
+
 NODE_CLASS_MAPPINGS = {
     "Simple Image Rotate": SimpleImageRotate,
     "Auto Image Selector": AutoImageSelector,
+    "OpenCVDenoiseColored": OpenCVDenoiseColored,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Simple Image Rotate": "Simple Image Rotate",
     "Auto Image Selector": "Auto Image Selector",
+    "OpenCVDenoiseColored": "OpenCV Denoise (Luma/Chroma)",
 }
 
 
