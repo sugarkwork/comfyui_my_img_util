@@ -12,9 +12,9 @@ OpenCVの `fastNlMeansDenoisingColored` を利用して、画像のノイズを�
 
 ### Inputs
 - `image`: (IMAGE) 処理対象の画像
-- `h_luminance`: (FLOAT) 輝度ノイズの除去強度。値を大きくするとディテールが失われやすくなります。
-- `h_color`: (FLOAT) 色ノイズの除去強度。一般的に `h_luminance` より大きい値を設定します。
-- `search_window`: (INT) 類似パッチを探索するウィンドウサイズ。大きいほど処理が重くなります。
+- `h_luminance`: (FLOAT) 輝度ノイズの除去強度。値を大きくするとノイズがよく消えますが、ディテールが失われやすくなります（目安 1.5 ~ 2.5）
+- `h_color`: (FLOAT) 色ノイズの除去強度。一般的に `h_luminance` より少し大きい値を設定します。
+- `search_window`: (INT) 類似パッチを探索するウィンドウサイズ。大きいほど処理が重くなりますが、細かい部分までノイズが取れて品質が上がります。
 - `template_window`: (INT) 類似性を計算するためのテンプレートパッチサイズ。
 
 ### Outputs
