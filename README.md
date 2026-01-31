@@ -4,6 +4,12 @@ ComfyUI 用の実験用のノードです。
 
 # Nodes
 
+## Image Resize And Crop
+
+画像のサイズを変更する際に、アスペクト比を維持しながら、どこを中心として画像を切り落とすかを選択出来ます。
+
+<img width="2435" height="1487" alt="image" src="https://github.com/user-attachments/assets/67b26190-7e23-42d1-a131-516867b674f0" />
+
 ## OpenCV Denoise (Luma/Chroma)
 
 OpenCVの `fastNlMeansDenoisingColored` を利用して、画像のノイズを除去します。
