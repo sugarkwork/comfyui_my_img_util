@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import torch
+import torch.nn.functional as F
 from PIL import Image, ImageChops
 import cv2
 
@@ -165,16 +166,97 @@ class OpenCVDenoiseColored:
         return (torch.stack(output_images),)
 
 
+class ImageResizeAndCrop:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "width": ("INT", {"default": 512, "min": 1, "max": 24576, "step": 1}),
+                "height": ("INT", {"default": 512, "min": 1, "max": 24576, "step": 1}),
+                "method": (["lanczos", "bicubic", "bilinear", "area", "nearest"],),
+                "h_align": (["left", "center", "right"], {"default": "center"}),
+                "v_align": (["top", "center", "bottom"], {"default": "center"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "resize_and_crop"
+    CATEGORY = "image"
+
+    def resize_and_crop(self, image, width, height, method="lanczos", h_align="center", v_align="center"):
+        # image layout is (B, H, W, C)
+        B, H, W, C = image.shape
+        
+        # Determine strict resize to cover the target area
+        scale_w = width / W
+        scale_h = height / H
+        scale = max(scale_w, scale_h)
+        
+        new_w = int(round(W * scale))
+        new_h = int(round(H * scale))
+        
+        # execute resize
+        if method == "lanczos":
+            resized_list = []
+            for i in range(B):
+                img_tensor = image[i]
+                pil_img = convert_to_pil(img_tensor)
+                pil_img = pil_img.resize((new_w, new_h), Image.LANCZOS)
+                resized_list.append(convert_to_tensor(pil_img))
+            resized = torch.cat(resized_list, dim=0)
+        else:
+            # torch expects (B, C, H, W)
+            permuted = image.permute(0, 3, 1, 2)
+            
+            align_corners = False
+            if method in ["bicubic", "bilinear"]:
+                align_corners = False
+            
+            resized_permuted = F.interpolate(permuted, size=(new_h, new_w), mode=method, align_corners=align_corners)
+            resized = resized_permuted.permute(0, 2, 3, 1)
+            
+        # execute crop
+        curr_h, curr_w = resized.shape[1], resized.shape[2]
+        
+        if h_align == "left":
+            x = 0
+        elif h_align == "right":
+            x = curr_w - width
+        else:
+            x = (curr_w - width) // 2
+            
+        if v_align == "top":
+            y = 0
+        elif v_align == "bottom":
+            y = curr_h - height
+        else:
+            y = (curr_h - height) // 2
+            
+        # bound check
+        x = max(0, min(x, curr_w - width))
+        y = max(0, min(y, curr_h - height))
+        
+        cropped = resized[:, y:y+height, x:x+width, :]
+        return (cropped,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Simple Image Rotate": SimpleImageRotate,
     "Auto Image Selector": AutoImageSelector,
     "OpenCVDenoiseColored": OpenCVDenoiseColored,
+    "Image Resize And Crop": ImageResizeAndCrop,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Simple Image Rotate": "Simple Image Rotate",
     "Auto Image Selector": "Auto Image Selector",
     "OpenCVDenoiseColored": "OpenCV Denoise (Luma/Chroma)",
+    "Image Resize And Crop": "Image Resize And Crop",
 }
 
 
