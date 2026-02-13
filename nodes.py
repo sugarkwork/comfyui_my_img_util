@@ -245,11 +245,69 @@ class ImageResizeAndCrop:
         return (cropped,)
 
 
+class ImageTrimEdges:
+    """画像の上下左右を指定量（ピクセルまたはパーセント）でトリミングするノード"""
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "top": ("FLOAT", {"default": 0.0, "min": 0.0, "step": 0.1}),
+                "bottom": ("FLOAT", {"default": 0.0, "min": 0.0, "step": 0.1}),
+                "left": ("FLOAT", {"default": 0.0, "min": 0.0, "step": 0.1}),
+                "right": ("FLOAT", {"default": 0.0, "min": 0.0, "step": 0.1}),
+                "is_pixel": ("BOOLEAN", {"default": True}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "trim"
+    CATEGORY = "image"
+
+    def trim(self, image: torch.Tensor, top: float, bottom: float, left: float, right: float, is_pixel: bool):
+        # image layout: (B, H, W, C)
+        B, H, W, C = image.shape
+
+        if is_pixel:
+            t = int(top)
+            b = int(bottom)
+            l = int(left)
+            r = int(right)
+        else:
+            # パーセント → ピクセルに変換
+            t = int(H * min(top, 99.0) / 100.0)
+            b = int(H * min(bottom, 99.0) / 100.0)
+            l = int(W * min(left, 99.0) / 100.0)
+            r = int(W * min(right, 99.0) / 100.0)
+
+        # 切り取り後のサイズが最低1ピクセル残るようにクランプ
+        if t + b >= H:
+            t = 0
+            b = 0
+        if l + r >= W:
+            l = 0
+            r = 0
+
+        y_start = t
+        y_end = H - b
+        x_start = l
+        x_end = W - r
+
+        cropped = image[:, y_start:y_end, x_start:x_end, :]
+        return (cropped,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Simple Image Rotate": SimpleImageRotate,
     "Auto Image Selector": AutoImageSelector,
     "OpenCVDenoiseColored": OpenCVDenoiseColored,
     "Image Resize And Crop": ImageResizeAndCrop,
+    "Image Trim Edges": ImageTrimEdges,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -257,6 +315,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Auto Image Selector": "Auto Image Selector",
     "OpenCVDenoiseColored": "OpenCV Denoise (Luma/Chroma)",
     "Image Resize And Crop": "Image Resize And Crop",
+    "Image Trim Edges": "Image Trim Edges",
 }
 
 
